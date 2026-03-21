@@ -8,5 +8,5 @@ export const openrouter = createOpenAI({
 export const models = {
   coordinator: openrouter('anthropic/claude-sonnet-4'),
   research: openrouter('perplexity/sonar-pro'),
-  fast: openrouter('google/gemini-2.0-flash'),
+  fast: openrouter('google/gemini-2.5-flash'),
 };

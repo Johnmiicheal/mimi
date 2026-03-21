@@ -2,12 +2,12 @@ import { useCallback, useRef, useEffect } from 'react';
 
 interface ControlChange {
   controlId: string;
-  value: any;
+  value: unknown;
   timestamp: number;
 }
 
 interface UseReplanOptions {
-  onReplan: (changes: Map<string, any>) => void;
+  onReplan: (changes: Map<string, unknown>) => void;
   debounceMs?: number;
 }
 
@@ -19,7 +19,7 @@ export function useReplan({ onReplan, debounceMs = 1000 }: UseReplanOptions) {
   const changesRef = useRef<Map<string, ControlChange>>(new Map());
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleControlChange = useCallback((controlId: string, value: any) => {
+  const handleControlChange = useCallback((controlId: string, value: unknown) => {
     // Store the change
     changesRef.current.set(controlId, {
       controlId,
@@ -36,7 +36,7 @@ export function useReplan({ onReplan, debounceMs = 1000 }: UseReplanOptions) {
     timeoutRef.current = setTimeout(() => {
       if (changesRef.current.size > 0) {
         // Convert changes to simple map of controlId -> value
-        const changeMap = new Map<string, any>();
+        const changeMap = new Map<string, unknown>();
         changesRef.current.forEach((change) => {
           changeMap.set(change.controlId, change.value);
         });
@@ -65,7 +65,49 @@ export function useReplan({ onReplan, debounceMs = 1000 }: UseReplanOptions) {
 /**
  * Formats control changes into a natural language prompt for the AI
  */
-export function formatReplanPrompt(changes: Map<string, any>): string {
+function formatDateValue(value: unknown): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  }
+
+  return String(value);
+}
+
+function formatDestinationValue(value: unknown): string {
+  if (!value || typeof value !== 'object') {
+    return String(value);
+  }
+
+  const destination = value as { name?: unknown; code?: unknown };
+  if (typeof destination.name === 'string' && destination.name.trim().length > 0) {
+    if (typeof destination.code === 'string' && destination.code.trim().length > 0) {
+      return `${destination.name} (${destination.code})`;
+    }
+
+    return destination.name;
+  }
+
+  if (typeof destination.code === 'string' && destination.code.trim().length > 0) {
+    return destination.code;
+  }
+
+  return String(value);
+}
+
+function formatBudgetRangeValue(value: unknown): string {
+  if (!value || typeof value !== 'object') {
+    return String(value);
+  }
+
+  const budgetRange = value as { min?: unknown; max?: unknown };
+  return `$${budgetRange.min ?? '?'}-$${budgetRange.max ?? '?'}`;
+}
+
+export function formatReplanPrompt(changes: Map<string, unknown>): string {
   const changeDescriptions: string[] = [];
 
   changes.forEach((value, controlId) => {
@@ -82,16 +124,22 @@ export function formatReplanPrompt(changes: Map<string, any>): string {
         changeDescriptions.push(`${value} night${value !== 1 ? 's' : ''}`);
         break;
       case 'departure':
-        changeDescriptions.push(`departure on ${value}`);
+        changeDescriptions.push(`departure on ${formatDateValue(value)}`);
+        break;
+      case 'return':
+        changeDescriptions.push(`return on ${formatDateValue(value)}`);
         break;
       case 'destination':
-        changeDescriptions.push(`destination to ${value}`);
+        changeDescriptions.push(`destination to ${formatDestinationValue(value)}`);
+        break;
+      case 'nationality':
+        changeDescriptions.push(`passport country as ${formatDestinationValue(value)}`);
         break;
       case 'pace':
         changeDescriptions.push(`${value} pace`);
         break;
       case 'budgetRange':
-        changeDescriptions.push(`budget range: $${value.min}-$${value.max}`);
+        changeDescriptions.push(`budget range: ${formatBudgetRangeValue(value)}`);
         break;
       default:
         changeDescriptions.push(`${controlId}: ${value}`);

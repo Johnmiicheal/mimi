@@ -28,7 +28,7 @@ When a confirmed destination is available, call the \`getPackingList\` tool.
 Use weather, activities, and trip duration when available.
 Do not rewrite the packing list in prose because the UI already renders the card.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.fast,
+  model: models.agent,
   tools: () => ({
     getPackingList: getPackingListTool,
   }),

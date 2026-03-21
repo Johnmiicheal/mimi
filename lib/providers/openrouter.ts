@@ -1,4 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 
 export const openrouter = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
@@ -6,7 +7,10 @@ export const openrouter = createOpenAI({
 });
 
 export const models = {
+  agent: process.env.ANTHROPIC_API_KEY
+    ? anthropic('claude-sonnet-4-20250514')
+    : openrouter('openai/gpt-4o-mini'),
   coordinator: openrouter('anthropic/claude-sonnet-4'),
   research: openrouter('perplexity/sonar-pro'),
-  fast: openrouter('google/gemini-2.5-flash'),
+  fast: openrouter('openai/gpt-4o-mini'),
 };

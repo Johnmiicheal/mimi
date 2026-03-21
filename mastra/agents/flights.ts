@@ -4,81 +4,126 @@ import { generateText, Output } from 'ai';
 import { z } from 'zod';
 import { models } from '@/lib/providers/openrouter';
 
-export const flightsSchema = z.object({
-  route: z.string(),
-  options: z.array(z.object({
-    airline: z.string(),
-    price: z.number(),
-    duration: z.string(),
-    stops: z.number(),
-    departTime: z.string(),
-    arrivalTime: z.string(),
-    class: z.enum(['economy', 'premium', 'business']),
-  })).max(4),
-  cheapestTip: z.string(),
-  bestMonths: z.string(),
+const flightOptionSchema = z.object({
+  airline: z.string(),
+  price: z.number(),
+  duration: z.string(),
+  stops: z.number(),
+  departTime: z.string(),
+  arrivalTime: z.string(),
+  class: z.enum(['economy', 'premium', 'business']),
+  baggage: z.object({
+    carryOn: z.string(),
+    checked: z.string(),
+  }).optional(),
 });
 
-export type FlightsAgentOutput = z.infer<typeof flightsSchema>;
+const alternativeTransportSchema = z.object({
+  mode: z.enum(['train', 'bus', 'ferry', 'car', 'rideshare']),
+  provider: z.string(),
+  duration: z.string(),
+  priceEstimate: z.string(),
+  bookingHint: z.string(),
+  bestFor: z.string(),
+});
+
+const localTransportSchema = z.object({
+  mode: z.string(),
+  details: z.string(),
+  priceEstimate: z.string(),
+});
+
+export const transportSchema = z.object({
+  summary: z.string(),
+  recommendedMode: z.enum(['air', 'train', 'bus', 'ferry', 'car', 'mixed']),
+  route: z.string(),
+  flights: z.array(flightOptionSchema).max(4),
+  alternatives: z.array(alternativeTransportSchema).max(4),
+  localOptions: z.array(localTransportSchema).max(4),
+  bookingTip: z.string(),
+});
+
+export type FlightsData = z.infer<typeof transportSchema>;
 
 export const flightsAgent = new Agent({
   id: 'flights-agent',
-  name: 'Flights Agent',
-  description: 'Handles flight research by calling the searchFlights tool and returning the flights comparison card data.',
-  instructions: `You are a flights specialist inside a multi-agent travel planner.
+  name: 'Transportation Agent',
+  description: 'Handles trip transportation planning by calling the getTransportOptions tool and returning multi-mode transport data.',
+  instructions: `You are a transportation specialist inside a multi-agent travel planner.
 
-Only act when the user explicitly asks for flights, booking, or airfare.
-When they do, call the \`searchFlights\` tool.
-Do not rewrite the flight table because the UI already renders the card.
+Treat prior conversation turns as valid context.
+If the destination, origin, or dates were already stated earlier in the chat, use them.
+Only ask for a field when it is missing or ambiguous right now.
+
+Act whenever the user asks about flights, airfare, airlines, routes, getting there, transport options, transfers, trains, buses, ferries, taxis, rideshare, or booking transport.
+If the origin is missing, ask: Travelling from: {{::country[origin|GB]}}
+If the destination is missing, ask: Destination: {{::country[destination|JP]}}
+If the dates are missing, ask: Departure {{::date-picker[departure]}} Return {{::date-picker[return]}}
+Never invent or assume a departure location.
+Only call the \`getTransportOptions\` tool when origin, destination, and dates are known.
+Do not rewrite the transport tables or cards because the UI already renders them.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.research,
+  model: models.agent,
   tools: () => ({
-    searchFlights: searchFlightsTool,
+    getTransportOptions: getTransportOptionsTool,
   }),
 });
 
-export async function runFlights(params: {
+export async function runTransport(params: {
   destination: string;
   origin?: string;
   dates?: { from: string; to: string };
   travelers?: number;
-}): Promise<FlightsAgentOutput> {
-  const origin = params.origin ?? 'New York';
-  const datesCtx = params.dates ? ` departing ${params.dates.from}` : '';
-  const travelersCtx = params.travelers ? ` for ${params.travelers} traveller${params.travelers > 1 ? 's' : ''}` : '';
+}): Promise<FlightsData> {
+  const origin = params.origin?.trim();
+  const hasDates = Boolean(params.dates?.from && params.dates?.to);
+
+  if (!origin) {
+    throw new Error('Transport planning requires an origin before searching for routes.');
+  }
+
+  if (!hasDates) {
+    throw new Error('Transport planning requires travel dates before searching for routes.');
+  }
+
+  const datesCtx = params.dates ? ` Travel dates: ${params.dates.from} to ${params.dates.to}.` : '';
+  const travelersCtx = params.travelers ? ` For ${params.travelers} traveller${params.travelers > 1 ? 's' : ''}.` : '';
 
   const result = await generateText({
     model: models.research,
-    output: Output.object({ schema: flightsSchema }),
-    prompt: `Research typical flights from ${origin} to ${params.destination}${datesCtx}${travelersCtx}.
+    output: Output.object({ schema: transportSchema }),
+    prompt: `Plan transportation from ${origin} to ${params.destination}.${datesCtx}${travelersCtx}
 
-Return realistic flight options based on current market:
-- route: e.g. "JFK → NRT"
-- options: up to 4 realistic flight options with:
-  - airline: real airline name
-  - price: realistic one-way price in USD per person
-  - duration: e.g. "14h 30m"
-  - stops: 0 for direct, 1+ for connections
-  - departTime: e.g. "08:30"
-  - arrivalTime: e.g. "22:45 +1"
-  - class: economy, premium, or business
-- cheapestTip: one practical tip for finding cheaper flights
-- bestMonths: best months to visit for good prices + weather combo`,
+Return a multi-mode transport summary with:
+- summary: one concise recommendation sentence
+- recommendedMode: one of air, train, bus, ferry, car, mixed
+- route: example "JFK -> HND"
+- flights: up to 4 realistic flight options with airline, price in USD per person, duration, stops, departTime, arrivalTime, class, and baggage allowances when possible
+- alternatives: up to 4 realistic non-flight options or supporting long-distance options (train, bus, ferry, car, rideshare) with provider, duration, priceEstimate, bookingHint, and bestFor
+- localOptions: up to 4 useful ways to get around locally, such as metro, taxis, Uber, rail passes, airport transfers, or ferries
+- bookingTip: one practical tip about saving money or choosing the right transport mode
+
+Rules:
+- Flights should be the most concrete and data-rich section
+- If a mode is unrealistic for this route, do not invent it
+- For train/bus/ferry/car, priceEstimate can be approximate and bookingHint can explain where to check
+- Local options should help the traveller once they arrive`,
   });
+
   return result.output;
 }
 
-export const searchFlightsTool = createTool({
-  id: 'searchFlights',
-  description: 'Search for typical flight options and prices. Only call when the user explicitly asks about flights or booking.',
+export const getTransportOptionsTool = createTool({
+  id: 'getTransportOptions',
+  description: 'Plan transportation to a destination across flights, rail, bus, ferry, car, and local mobility. Use when the user asks how to get there or about transport.',
   inputSchema: z.object({
     destination: z.string().describe('The destination city or country'),
-    origin: z.string().optional().describe('Departure city (default New York)'),
+    origin: z.string().optional().describe('Departure country or city. Do not guess if unknown.'),
     dates: z.object({ from: z.string(), to: z.string() }).optional().describe('Travel dates'),
     travelers: z.number().optional().describe('Number of travellers'),
   }),
   execute: async (input) => {
-    return runFlights({
+    return runTransport({
       destination: input.destination,
       origin: input.origin,
       dates: input.dates,
@@ -86,3 +131,5 @@ export const searchFlightsTool = createTool({
     });
   },
 });
+
+export const searchFlightsTool = getTransportOptionsTool;

@@ -33,7 +33,7 @@ export const weatherAgent = new Agent({
 When a confirmed destination is available, always call the \`getWeather\` tool.
 Do not rewrite the forecast as paragraphs because the UI already renders the card.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.fast,
+  model: models.agent,
   tools: () => ({
     getWeather: getWeatherTool,
   }),

@@ -45,7 +45,7 @@ Only act when a destination and trip length are known.
 When they are known, call the \`tripPlanner\` tool.
 Do not write the itinerary as plain text because the UI already renders the board.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.research,
+  model: models.agent,
   tools: () => ({
     tripPlanner: tripPlannerTool,
   }),

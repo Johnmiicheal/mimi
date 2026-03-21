@@ -4,6 +4,6 @@ export { getCurrencyTool } from '@/mastra/agents/currency';
 export { checkVisaTool } from '@/mastra/agents/visa';
 export { getLocalEventsTool } from '@/mastra/agents/events';
 export { getPackingListTool } from '@/mastra/agents/shopping';
-export { searchFlightsTool } from '@/mastra/agents/flights';
+export { getTransportOptionsTool, searchFlightsTool } from '@/mastra/agents/flights';
 export { tripPlannerTool } from '@/mastra/agents/planner';
 export { suggestDestinationsTool } from '@/mastra/agents/suggestions';

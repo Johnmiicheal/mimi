@@ -13,14 +13,30 @@ import { type ColorConfig, CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui
 const DEFAULT_COLOR = CONTROL_COLORS[3]; // amber fallback
 
 interface DatePickerProps {
-  value: Date;
+  value: Date | string | number | null | undefined;
   onChange: (date: Date) => void;
   className?: string;
   color?: ColorConfig;
 }
 
+function normalizeDate(value: DatePickerProps["value"]): Date {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value;
+  }
+
+  if (typeof value === "string" || typeof value === "number") {
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  return new Date();
+}
+
 export function DatePicker({ value, onChange, color = DEFAULT_COLOR }: DatePickerProps) {
   const [open, setOpen] = useState(false);
+  const displayDate = normalizeDate(value);
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
@@ -36,7 +52,7 @@ export function DatePicker({ value, onChange, color = DEFAULT_COLOR }: DatePicke
           transition={{ type: "spring", stiffness: 800, damping: 20 }}
         >
           <CalendarIcon weight="bold" className="w-4 h-4 text-white/90" />
-          <span>{format(value, "MMM dd, yyyy")}</span>
+          <span>{format(displayDate, "MMM dd, yyyy")}</span>
         </motion.button>
       </Popover.Trigger>
 
@@ -49,7 +65,7 @@ export function DatePicker({ value, onChange, color = DEFAULT_COLOR }: DatePicke
         >
           <DayPicker
             mode="single"
-            selected={value}
+            selected={displayDate}
             onSelect={(date) => {
               if (date) { onChange(date); setOpen(false); }
             }}

@@ -29,7 +29,7 @@ Only act when destination and travel dates are known.
 When they are known, call the \`getLocalEvents\` tool.
 Do not restate the full event list because the UI already renders the card.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.research,
+  model: models.agent,
   tools: () => ({
     getLocalEvents: getLocalEventsTool,
   }),

@@ -13,24 +13,30 @@ export interface SafetyData {
 }
 
 const levelConfig = {
-  low: { label: 'Safe to Travel', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', dot: 'bg-emerald-500' },
-  medium: { label: 'Exercise Caution', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', dot: 'bg-amber-500' },
-  high: { label: 'Travel Advisory', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', dot: 'bg-red-500' },
+  low: { label: 'Safe to Travel', color: 'text-emerald-200', bg: 'rgba(52,211,153,0.14)', border: 'rgba(74,222,128,0.18)', dot: 'bg-emerald-400' },
+  medium: { label: 'Exercise Caution', color: 'text-amber-200', bg: 'rgba(251,191,36,0.14)', border: 'rgba(251,191,36,0.18)', dot: 'bg-amber-400' },
+  high: { label: 'Travel Advisory', color: 'text-red-200', bg: 'rgba(248,113,113,0.14)', border: 'rgba(248,113,113,0.18)', dot: 'bg-red-400' },
 };
 
 export function SafetyCard({ data }: { data: SafetyData }) {
   const config = levelConfig[data.level];
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden w-full">
+    <div
+      className="rounded-[28px] overflow-hidden w-full border border-white/12"
+      style={{
+        background: "linear-gradient(180deg, rgba(14,29,73,0.98) 0%, rgba(9,20,55,0.98) 100%)",
+        boxShadow: "0 24px 56px rgba(5,10,33,0.3), inset 0 1px 0 rgba(255,255,255,0.06)",
+      }}
+    >
       {/* Header */}
-      <div className={cn("px-4 pt-4 pb-3 flex items-start justify-between", config.bg)}>
+      <div className="px-4 pt-4 pb-3 flex items-start justify-between" style={{ background: `linear-gradient(180deg, ${config.bg}, rgba(255,255,255,0))` }}>
         <div className="flex items-center gap-2.5">
-          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", config.bg, config.border, "border")}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center border" style={{ background: "rgba(255,255,255,0.05)", borderColor: config.border }}>
             <Shield weight="fill" className={cn("w-5 h-5", config.color)} />
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Safety Rating</p>
+            <p className="text-[11px] font-semibold text-white/42 uppercase tracking-[0.22em]">Safety Rating</p>
             <p className={cn("text-base font-semibold", config.color)}>{config.label}</p>
           </div>
         </div>
@@ -42,7 +48,7 @@ export function SafetyCard({ data }: { data: SafetyData }) {
               key={n}
               className={cn(
                 "w-2.5 h-2.5 rounded-full transition-colors",
-                n <= data.rating ? config.dot : "bg-gray-200"
+                n <= data.rating ? config.dot : "bg-white/12"
               )}
             />
           ))}
@@ -51,16 +57,17 @@ export function SafetyCard({ data }: { data: SafetyData }) {
 
       {/* Advisories */}
       {data.advisories.length > 0 && (
-        <div className="px-4 py-3 border-b border-gray-50">
+        <div className="px-4 py-3 border-b border-white/8">
           <div className="flex items-center gap-1.5 mb-2">
-            <Warning weight="fill" className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Advisories</span>
+            <Warning weight="fill" className="w-3.5 h-3.5 text-amber-300" />
+            <span className="text-[11px] font-semibold text-white/42 uppercase tracking-[0.22em]">Advisories</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {data.advisories.map((adv, i) => (
               <span
                 key={i}
-                className="px-2.5 py-1 text-xs rounded-full bg-amber-50 text-amber-700 border border-amber-100"
+                className="px-2.5 py-1 text-xs rounded-full text-amber-100 border"
+                style={{ background: "rgba(251,191,36,0.14)", borderColor: "rgba(251,191,36,0.18)" }}
               >
                 {adv}
               </span>
@@ -73,8 +80,8 @@ export function SafetyCard({ data }: { data: SafetyData }) {
       {data.headlines.length > 0 && (
         <div className="px-4 py-3">
           <div className="flex items-center gap-1.5 mb-2">
-            <Newspaper weight="fill" className="w-3.5 h-3.5 text-gray-400" />
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Recent News</span>
+            <Newspaper weight="fill" className="w-3.5 h-3.5 text-white/45" />
+            <span className="text-[11px] font-semibold text-white/42 uppercase tracking-[0.22em]">Recent News</span>
           </div>
           <div className="space-y-2">
             {data.headlines.slice(0, 3).map((h, i) => (
@@ -85,10 +92,10 @@ export function SafetyCard({ data }: { data: SafetyData }) {
                 transition={{ delay: i * 0.08 }}
                 className="flex items-start gap-2"
               >
-                <div className="w-1 h-1 rounded-full bg-gray-300 mt-1.5 shrink-0" />
+                <div className="w-1 h-1 rounded-full bg-white/24 mt-1.5 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-700 leading-snug line-clamp-2">{h.title}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{h.date}</p>
+                  <p className="text-xs text-white/80 leading-snug line-clamp-2">{h.title}</p>
+                  <p className="text-xs text-white/40 mt-0.5">{h.date}</p>
                 </div>
               </motion.div>
             ))}
@@ -98,8 +105,8 @@ export function SafetyCard({ data }: { data: SafetyData }) {
 
       {/* Footer */}
       <div className="px-4 pb-3 flex items-center gap-1.5">
-        <Clock weight="regular" className="w-3 h-3 text-gray-300" />
-        <span className="text-xs text-gray-400">Updated {data.lastUpdated}</span>
+        <Clock weight="regular" className="w-3 h-3 text-white/28" />
+        <span className="text-xs text-white/40">Updated {data.lastUpdated}</span>
       </div>
     </div>
   );

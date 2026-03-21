@@ -26,7 +26,7 @@ export const currencyAgent = new Agent({
 When the trip is international or uses a non-home currency, call the \`getCurrency\` tool.
 Do not duplicate the conversion table in text because the UI already renders the card.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.fast,
+  model: models.agent,
   tools: () => ({
     getCurrency: getCurrencyTool,
   }),

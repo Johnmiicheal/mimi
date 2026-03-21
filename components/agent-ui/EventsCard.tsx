@@ -22,12 +22,12 @@ export interface EventsData {
 }
 
 const categoryConfig = {
-  festival: { icon: <Confetti    weight="fill" className="w-3.5 h-3.5" />, color: 'text-purple-600 bg-purple-50 border-purple-100' },
-  holiday:  { icon: <Star        weight="fill" className="w-3.5 h-3.5" />, color: 'text-yellow-600 bg-yellow-50 border-yellow-100' },
-  concert:  { icon: <MusicNote   weight="fill" className="w-3.5 h-3.5" />, color: 'text-pink-600 bg-pink-50 border-pink-100' },
-  sport:    { icon: <Trophy      weight="fill" className="w-3.5 h-3.5" />, color: 'text-green-600 bg-green-50 border-green-100' },
-  market:   { icon: <ShoppingBag weight="fill" className="w-3.5 h-3.5" />, color: 'text-orange-600 bg-orange-50 border-orange-100' },
-  other:    { icon: <CalendarBlank weight="fill" className="w-3.5 h-3.5" />, color: 'text-gray-600 bg-gray-50 border-gray-100' },
+  festival: { icon: <Confetti    weight="fill" className="w-3.5 h-3.5" />, color: 'text-purple-100 bg-purple-400/15 border-purple-300/20' },
+  holiday:  { icon: <Star        weight="fill" className="w-3.5 h-3.5" />, color: 'text-yellow-100 bg-yellow-400/15 border-yellow-300/20' },
+  concert:  { icon: <MusicNote   weight="fill" className="w-3.5 h-3.5" />, color: 'text-pink-100 bg-pink-400/15 border-pink-300/20' },
+  sport:    { icon: <Trophy      weight="fill" className="w-3.5 h-3.5" />, color: 'text-emerald-100 bg-emerald-400/15 border-emerald-300/20' },
+  market:   { icon: <ShoppingBag weight="fill" className="w-3.5 h-3.5" />, color: 'text-orange-100 bg-orange-400/15 border-orange-300/20' },
+  other:    { icon: <CalendarBlank weight="fill" className="w-3.5 h-3.5" />, color: 'text-white/75 bg-white/8 border-white/10' },
 };
 
 const ACTIVE_COLOR  = CONTROL_COLORS[4]; // purple
@@ -45,11 +45,11 @@ export function EventsCard({ data }: { data: EventsData }) {
   const filters = ['all', ...usedCategories];
 
   return (
-    <div className="rounded-2xl overflow-hidden w-full" style={{ background: "#0d2050", border: "1px solid rgba(255,255,255,0.12)" }}>
+    <div className="rounded-[28px] overflow-hidden w-full" style={{ background: "linear-gradient(180deg, rgba(14,29,73,0.98) 0%, rgba(9,20,55,0.98) 100%)", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 24px 56px rgba(5,10,33,0.3), inset 0 1px 0 rgba(255,255,255,0.06)" }}>
       {/* Header */}
-      <div className="px-4 pt-4 pb-2" style={{ background: "rgba(147,51,234,0.15)" }}>
-        <p className="text-xs font-semibold text-purple-300 uppercase tracking-wide">Local Events</p>
-        <p className="text-sm text-white/60 mt-0.5">
+      <div className="px-4 pt-4 pb-3" style={{ background: "linear-gradient(180deg, rgba(168,85,247,0.18), rgba(168,85,247,0.05))" }}>
+        <p className="text-[11px] font-semibold text-purple-200 uppercase tracking-[0.22em]">Local Events</p>
+        <p className="text-sm text-white/62 mt-1">
           {data.travelDates.from} – {data.travelDates.to} · {data.destination}
         </p>
       </div>
@@ -93,7 +93,7 @@ export function EventsCard({ data }: { data: EventsData }) {
                       {event.category}
                     </span>
                     {event.mustSee && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-yellow-50 text-yellow-700 border border-yellow-100">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-yellow-400/15 text-yellow-100 border border-yellow-300/20">
                         <Star weight="fill" className="w-3 h-3" />
                         Must-see
                       </span>

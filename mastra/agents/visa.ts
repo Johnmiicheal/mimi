@@ -26,7 +26,7 @@ Only act when both nationality and destination are known.
 When they are known, call the \`checkVisa\` tool.
 Do not restate the checklist in full because the UI already renders the card.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.research,
+  model: models.agent,
   tools: () => ({
     checkVisa: checkVisaTool,
   }),

@@ -5,7 +5,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowClockwise, Warning, X } from "@phosphor-icons/react";
-import { useReplan, formatReplanPrompt } from "@/lib/hooks/useReplan";
+import { formatReplanPrompt } from "@/lib/hooks/useReplan";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { ChatFooter } from "@/components/chat/ChatFooter";
 import { ChatMessage } from "@/components/chat/ChatMessage";
@@ -17,6 +17,8 @@ import {
 
 export default function Home() {
   const [controlValues, setControlValues] = useState<Record<string, unknown>>({});
+  const [committedControlValues, setCommittedControlValues] = useState<Record<string, unknown>>({});
+  const [pendingControlChanges, setPendingControlChanges] = useState<Record<string, unknown>>({});
   const [isReplanning, setIsReplanning] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [dismissedError, setDismissedError] = useState<string | null>(null);
@@ -30,6 +32,7 @@ export default function Home() {
   const isLoading = status === "submitted" || status === "streaming";
   const isThinking = status === "submitted";
   const isChat = messages.length > 0;
+  const hasPendingControlChanges = Object.keys(pendingControlChanges).length > 0;
 
   const latestUserMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
@@ -63,14 +66,14 @@ export default function Home() {
   const handleAction = useCallback(
     async (prompt: string) => {
       if (isLoading) return;
+      setPendingControlChanges({});
       await sendMessage({ text: prompt });
     },
     [isLoading, sendMessage]
   );
 
   const handleReplan = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async (changes: Map<string, any>) => {
+    async (changes: Map<string, unknown>) => {
       if (messages.length === 0) return;
       setIsReplanning(true);
       await sendMessage({ text: formatReplanPrompt(changes) });
@@ -79,15 +82,37 @@ export default function Home() {
     [messages.length, sendMessage]
   );
 
-  const { handleControlChange: triggerReplan } = useReplan({
-    onReplan: handleReplan,
-    debounceMs: 1500,
-  });
-
   const handleControlChange = (id: string, value: unknown) => {
     setControlValues((prev) => ({ ...prev, [id]: value }));
-    triggerReplan(id, value);
+    setPendingControlChanges((prev) => ({ ...prev, [id]: value }));
   };
+
+  const handleConfirmControlChanges = useCallback(async () => {
+    if (isLoading || !hasPendingControlChanges) return;
+
+    const changes = new Map<string, unknown>(Object.entries(pendingControlChanges));
+    await handleReplan(changes);
+    setCommittedControlValues((prev) => ({ ...prev, ...pendingControlChanges }));
+    setPendingControlChanges({});
+  }, [handleReplan, hasPendingControlChanges, isLoading, pendingControlChanges]);
+
+  const handleCancelControlChanges = useCallback(() => {
+    setControlValues((prev) => {
+      const next = { ...prev };
+
+      for (const key of Object.keys(pendingControlChanges)) {
+        if (Object.prototype.hasOwnProperty.call(committedControlValues, key)) {
+          next[key] = committedControlValues[key];
+        } else {
+          delete next[key];
+        }
+      }
+
+      return next;
+    });
+
+    setPendingControlChanges({});
+  }, [committedControlValues, pendingControlChanges]);
 
   useEffect(() => {
     if (!isChat || !latestUserMessageId) return;
@@ -207,7 +232,9 @@ export default function Home() {
                   onInputChange={setInputValue}
                   isLoading={isLoading}
                   onSubmit={handleSubmit}
-                  variant="inline"
+                  variant={hasPendingControlChanges ? "confirm" : "inline"}
+                  onConfirmChanges={handleConfirmControlChanges}
+                  onCancelChanges={handleCancelControlChanges}
                 />
               )}
             </AnimatePresence>

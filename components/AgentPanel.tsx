@@ -59,7 +59,7 @@ const AGENTS: AgentConfig[] = [
   { id: 'visa',      label: 'Visa',      icon: <Stamp          weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[3] },
   { id: 'events',    label: 'Events',    icon: <Confetti       weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[4] },
   { id: 'shopping',  label: 'Packing',   icon: <Bag            weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[5] },
-  { id: 'flights',   label: 'Flights',   icon: <Airplane       weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[1] },
+  { id: 'flights',   label: 'Transport', icon: <Airplane       weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[1] },
   { id: 'itinerary',   label: 'Itinerary',    icon: <CalendarBlank  weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[6] },
   { id: 'suggestions', label: 'Suggestions',  icon: <MapPin         weight="fill" className="w-3.5 h-3.5" />, color: CONTROL_COLORS[4] },
 ];

@@ -23,7 +23,7 @@ export const safetyAgent = new Agent({
 When a confirmed destination is available, always call the \`checkSafety\` tool.
 Do not restate the tool result in detail because the UI already renders the card.
 After the tool finishes, respond with one short sentence at most.`,
-  model: models.research,
+  model: models.agent,
   tools: () => ({
     checkSafety: checkSafetyTool,
   }),

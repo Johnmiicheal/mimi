@@ -129,11 +129,11 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
       });
     }
 
-    // Flights — only if not already searched
+    // Transport — only if not already checked
     if (!agentData.flights) {
       buttons.push({
-        label: 'Search flights',
-        prompt: `Search for flights to ${destName}`,
+        label: 'Plan transport',
+        prompt: `What are the best transportation options to get to ${destName}?`,
         icon: <Airplane weight="fill" className="w-3.5 h-3.5" />,
         colorIdx: 1,
       });
@@ -176,8 +176,8 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
     });
     if (!agentData.flights) {
       buttons.push({
-        label: 'Book flights',
-        prompt: `Search for flights to ${destName}`,
+        label: 'Transport options',
+        prompt: `How should I get to ${destName}?`,
         icon: <Airplane weight="fill" className="w-3.5 h-3.5" />,
         colorIdx: 1,
       });
@@ -196,7 +196,7 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
       transition={{ delay: 0.15, duration: 0.25, ease: "easeOut" }}
       className="mt-4 flex flex-wrap gap-2"
     >
-      {visible.map((btn, i) => {
+      {visible.map((btn) => {
         const color = CONTROL_COLORS[btn.colorIdx % CONTROL_COLORS.length];
         return (
           <motion.button

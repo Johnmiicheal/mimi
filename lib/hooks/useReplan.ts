@@ -135,6 +135,9 @@ export function formatReplanPrompt(changes: Map<string, unknown>): string {
       case 'nationality':
         changeDescriptions.push(`passport country as ${formatDestinationValue(value)}`);
         break;
+      case 'origin':
+        changeDescriptions.push(`travelling from ${formatDestinationValue(value)}`);
+        break;
       case 'pace':
         changeDescriptions.push(`${value} pace`);
         break;

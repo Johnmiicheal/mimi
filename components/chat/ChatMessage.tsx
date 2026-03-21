@@ -16,6 +16,7 @@ const TOOL_TO_AGENT: Record<string, AgentType> = {
   getLocalEvents:      'events',
   getPackingList:      'shopping',
   searchFlights:       'flights',
+  getTransportOptions: 'flights',
   tripPlanner:         'itinerary',
   suggestDestinations: 'suggestions',
 };

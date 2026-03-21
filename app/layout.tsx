@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fredoka } from "next/font/google";
+import { CivicAuthProvider } from "@civic/auth/nextjs";
 import "./globals.css";
 
 const fredoka = Fredoka({
@@ -20,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fredoka.variable} h-full antialiased`}>
-      <body className={`min-h-full flex flex-col ${fredoka.className}`}>{children}</body>
+      <body className={`min-h-full flex flex-col ${fredoka.className}`}>
+        <CivicAuthProvider>{children}</CivicAuthProvider>
+      </body>
     </html>
   );
 }

@@ -11,6 +11,8 @@ import { PaperPlaneRight } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { CloudShape } from "./CloudShape";
 import Image from "next/image";
+import { SessionHistoryMenu } from "./SessionHistoryMenu";
+import type { PersistedChatSession } from "@/lib/chatPersistence";
 
 // ─── Deterministic star field (LCG seeded — no SSR hydration mismatch) ────────
 interface StarDot {
@@ -75,6 +77,10 @@ interface LandingPageProps {
   isLoading: boolean;
   onSubmit: (e: React.FormEvent) => void;
   onSuggestionClick: (prompt: string) => void;
+  sessions: PersistedChatSession[];
+  onSessionSelect: (sessionId: string) => void;
+  onSessionRename: (sessionId: string) => void;
+  onSessionDelete: (sessionId: string) => void;
 }
 
 export function LandingPage({
@@ -83,6 +89,10 @@ export function LandingPage({
   isLoading,
   onSubmit,
   onSuggestionClick,
+  sessions,
+  onSessionSelect,
+  onSessionRename,
+  onSessionDelete,
 }: LandingPageProps) {
   const rawX = useMotionValue(0.5);
   const rawY = useMotionValue(0.5);
@@ -208,38 +218,47 @@ export function LandingPage({
         transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
         className="relative z-10 w-full max-w-lg"
       >
-        <form onSubmit={onSubmit} className="relative mb-5">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => onInputChange(e.target.value)}
-            placeholder="Where do you want to go?"
-            disabled={isLoading}
-            className={cn(
-              "w-full pl-6 pr-16 py-4 rounded-full",
-              "bg-white text-gray-800 placeholder:text-gray-400",
-              "text-base font-medium",
-              "focus:outline-none focus:ring-4 focus:ring-blue-300/40",
-              "disabled:opacity-50 disabled:cursor-not-allowed",
-              "transition-all duration-200"
-            )}
-            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)" }}
+        <div className="mb-5 flex items-center gap-3">
+          <form onSubmit={onSubmit} className="relative min-w-0 flex-1">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => onInputChange(e.target.value)}
+              placeholder="Where do you want to go?"
+              disabled={isLoading}
+              className={cn(
+                "w-full pl-6 pr-16 py-4 rounded-full",
+                "bg-white text-gray-800 placeholder:text-gray-400",
+                "text-base font-medium",
+                "focus:outline-none focus:ring-4 focus:ring-blue-300/40",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                "transition-all duration-200"
+              )}
+              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.22), 0 2px 6px rgba(0,0,0,0.12)" }}
+            />
+            <motion.button
+              type="submit"
+              disabled={isLoading || !inputValue?.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: "radial-gradient(ellipse at 50% 20%, #ffcbb8 0%, #f87868 30%, #e84830 65%, #c83018 100%)",
+                boxShadow: "inset 0 2px 10px rgba(255,220,205,0.6), inset 0 -6px 14px rgba(0,0,0,0.18), 0 10px 28px rgba(160,36,14,0.45)",
+              }}
+              whileHover={{ scale: 1.1, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+              whileTap={{ scale: 0.93, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+              transition={{ type: "spring", stiffness: 800, damping: 20 }}
+            >
+              <PaperPlaneRight weight="fill" className="w-5 h-5 text-white" />
+            </motion.button>
+          </form>
+
+          <SessionHistoryMenu
+            sessions={sessions}
+            onSelect={onSessionSelect}
+            onRename={onSessionRename}
+            onDelete={onSessionDelete}
           />
-          <motion.button
-            type="submit"
-            disabled={isLoading || !inputValue?.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
-            style={{
-              background: "radial-gradient(ellipse at 50% 20%, #ffcbb8 0%, #f87868 30%, #e84830 65%, #c83018 100%)",
-              boxShadow: "inset 0 2px 10px rgba(255,220,205,0.6), inset 0 -6px 14px rgba(0,0,0,0.18), 0 10px 28px rgba(160,36,14,0.45)",
-            }}
-            whileHover={{ scale: 1.1, transition: { type: "spring", stiffness: 800, damping: 20 } }}
-            whileTap={{ scale: 0.93, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
-            transition={{ type: "spring", stiffness: 800, damping: 20 }}
-          >
-            <PaperPlaneRight weight="fill" className="w-5 h-5 text-white" />
-          </motion.button>
-        </form>
+        </div>
 
         <div className="flex flex-wrap gap-3 justify-center">
           {SUGGESTIONS.map((s, i) => (

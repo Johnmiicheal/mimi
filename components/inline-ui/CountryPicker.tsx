@@ -5,94 +5,82 @@ import { Check, CaretDown, MagnifyingGlass } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import * as Popover from "@radix-ui/react-popover";
+import { type ColorConfig, CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui/colors";
+import { POPULAR_COUNTRIES, ALL_COUNTRIES, type Country } from "@/lib/inline-ui/countries";
 
-export interface Country {
-  code: string;
-  name: string;
-  flag: string;
+export type { Country };
+
+const DEFAULT_COLOR = CONTROL_COLORS[1];
+
+function FlagAvatar({ code, name, size = "sm" }: { code: string; name: string; size?: "sm" | "md" }) {
+  const dim = size === "md" ? "w-7 h-7" : "w-6 h-6";
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={`https://flagcdn.com/w40/${code.toLowerCase()}.png`}
+      alt={name}
+      className={cn(dim, "rounded-full object-cover shrink-0")}
+    />
+  );
 }
-
-// Popular travel destinations
-const COUNTRIES: Country[] = [
-  { code: "FR", name: "France", flag: "🇫🇷" },
-  { code: "ES", name: "Spain", flag: "🇪🇸" },
-  { code: "IT", name: "Italy", flag: "🇮🇹" },
-  { code: "JP", name: "Japan", flag: "🇯🇵" },
-  { code: "US", name: "United States", flag: "🇺🇸" },
-  { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
-  { code: "DE", name: "Germany", flag: "🇩🇪" },
-  { code: "TH", name: "Thailand", flag: "🇹🇭" },
-  { code: "GR", name: "Greece", flag: "🇬🇷" },
-  { code: "PT", name: "Portugal", flag: "🇵🇹" },
-  { code: "AU", name: "Australia", flag: "🇦🇺" },
-  { code: "NZ", name: "New Zealand", flag: "🇳🇿" },
-  { code: "BR", name: "Brazil", flag: "🇧🇷" },
-  { code: "MX", name: "Mexico", flag: "🇲🇽" },
-  { code: "CA", name: "Canada", flag: "🇨🇦" },
-  { code: "CH", name: "Switzerland", flag: "🇨🇭" },
-  { code: "AT", name: "Austria", flag: "🇦🇹" },
-  { code: "NL", name: "Netherlands", flag: "🇳🇱" },
-  { code: "SE", name: "Sweden", flag: "🇸🇪" },
-  { code: "NO", name: "Norway", flag: "🇳🇴" },
-  { code: "DK", name: "Denmark", flag: "🇩🇰" },
-  { code: "IS", name: "Iceland", flag: "🇮🇸" },
-  { code: "IE", name: "Ireland", flag: "🇮🇪" },
-  { code: "KR", name: "South Korea", flag: "🇰🇷" },
-  { code: "SG", name: "Singapore", flag: "🇸🇬" },
-  { code: "MY", name: "Malaysia", flag: "🇲🇾" },
-  { code: "ID", name: "Indonesia", flag: "🇮🇩" },
-  { code: "VN", name: "Vietnam", flag: "🇻🇳" },
-  { code: "PH", name: "Philippines", flag: "🇵🇭" },
-  { code: "AE", name: "UAE", flag: "🇦🇪" },
-  { code: "TR", name: "Turkey", flag: "🇹🇷" },
-  { code: "EG", name: "Egypt", flag: "🇪🇬" },
-  { code: "MA", name: "Morocco", flag: "🇲🇦" },
-  { code: "ZA", name: "South Africa", flag: "🇿🇦" },
-  { code: "AR", name: "Argentina", flag: "🇦🇷" },
-  { code: "CL", name: "Chile", flag: "🇨🇱" },
-  { code: "PE", name: "Peru", flag: "🇵🇪" },
-  { code: "CO", name: "Colombia", flag: "🇨🇴" },
-  { code: "CR", name: "Costa Rica", flag: "🇨🇷" },
-  { code: "FI", name: "Finland", flag: "🇫🇮" },
-];
 
 interface CountryPickerProps {
   value: Country;
   onChange: (country: Country) => void;
   className?: string;
+  color?: ColorConfig;
 }
 
-export function CountryPicker({ value, onChange, className }: CountryPickerProps) {
+export function CountryPicker({ value, onChange, color = DEFAULT_COLOR }: CountryPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const filteredCountries = COUNTRIES.filter((country) =>
-    country.name.toLowerCase().includes(search.toLowerCase())
+  const query = search.toLowerCase();
+  const filteredPopular = POPULAR_COUNTRIES.filter((c) => c.name.toLowerCase().includes(query));
+  const filteredAll = ALL_COUNTRIES.filter((c) => c.name.toLowerCase().includes(query));
+  const totalCount = filteredPopular.length + filteredAll.length;
+
+  const renderRow = (country: Country, index: number) => (
+    <motion.button
+      key={country.code}
+      onClick={() => { onChange(country); setOpen(false); setSearch(""); }}
+      className={cn(
+        "w-full flex items-center gap-3 px-3 py-2 rounded-xl text-white/80 hover:bg-white/10 transition-colors duration-150",
+        value.code === country.code && "bg-white/15 text-white"
+      )}
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.006 }}
+      whileHover={{ x: 3 }}
+    >
+      <FlagAvatar code={country.code} name={country.name} />
+      <span className="flex-1 text-left text-base font-semibold">{country.name}</span>
+      {value.code === country.code && (
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
+          <Check weight="bold" className="w-4 h-4 text-white" />
+        </motion.div>
+      )}
+    </motion.button>
   );
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <motion.button
-          className={cn(
-            "inline-flex items-center gap-2 px-3 py-1.5 rounded-full",
-            "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
-            "shadow-sm hover:shadow-md",
-            "text-gray-900 dark:text-white font-medium",
-            "transition-all duration-200",
-            className
-          )}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-semibold text-base text-white focus:outline-none"
+          style={{
+            background: color.gradient,
+            boxShadow: pillBoxShadow(color),
+          }}
+          whileHover={{ scale: 1.08, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+          whileTap={{ scale: 0.93, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+          transition={{ type: "spring", stiffness: 800, damping: 20 }}
         >
-          <span className="text-xl leading-none">{value.flag}</span>
+          <FlagAvatar code={value.code} name={value.name} />
           <span>{value.name}</span>
           <CaretDown
             weight="bold"
-            className={cn(
-              "w-3 h-3 text-gray-500 transition-transform duration-200",
-              open && "rotate-180"
-            )}
+            className={cn("w-3.5 h-3.5 text-white/70 transition-transform duration-200", open && "rotate-180")}
           />
         </motion.button>
       </Popover.Trigger>
@@ -101,98 +89,47 @@ export function CountryPicker({ value, onChange, className }: CountryPickerProps
         <Popover.Content
           align="start"
           sideOffset={8}
-          className={cn(
-            "bg-white dark:bg-gray-800 rounded-2xl p-3 shadow-xl border border-gray-200 dark:border-gray-700",
-            "w-[320px] z-50 animate-in fade-in-0 zoom-in-95"
-          )}
+          className="rounded-2xl p-3 shadow-2xl w-[300px] animate-in fade-in-0 zoom-in-95"
+          style={{ background: "#0d2050", border: "1px solid rgba(255,255,255,0.15)", zIndex: 9999 }}
         >
-                {/* Search input */}
-                <div className="relative mb-2">
-                  <MagnifyingGlass
-                    weight="bold"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search countries..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className={cn(
-                      "w-full pl-9 pr-3 py-2 rounded-xl",
-                      "bg-white/50 dark:bg-black/20 border border-gray-200/50 dark:border-gray-700/50",
-                      "text-sm placeholder:text-gray-400",
-                      "focus:outline-none focus:ring-2 focus:ring-primary-400/50",
-                      "transition-all duration-200"
-                    )}
-                  />
-                </div>
+          <div className="relative mb-3">
+            <MagnifyingGlass weight="bold" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <input
+              type="text"
+              placeholder="Search countries..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 rounded-xl bg-white/10 border border-white/15 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200"
+            />
+          </div>
 
-                {/* Countries list */}
-                <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                  {filteredCountries.map((country, index) => (
-                    <motion.button
-                      key={country.code}
-                      onClick={() => {
-                        onChange(country);
-                        setOpen(false);
-                        setSearch("");
-                      }}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2 rounded-xl",
-                        "hover:bg-blue-50 dark:hover:bg-blue-900/30",
-                        "transition-all duration-200",
-                        value.code === country.code &&
-                          "bg-blue-100 dark:bg-blue-900/50"
-                      )}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.01 }}
-                      whileHover={{ x: 4 }}
-                    >
-                      <span className="text-2xl leading-none">{country.flag}</span>
-                      <span className="flex-1 text-left text-sm font-medium">
-                        {country.name}
-                      </span>
-                      {value.code === country.code && (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                        >
-                          <Check weight="bold" className="w-4 h-4 text-blue-600" />
-                        </motion.div>
-                      )}
-                    </motion.button>
-                  ))}
-
-                  {filteredCountries.length === 0 && (
-                    <div className="text-center py-8 text-sm text-gray-500">
-                      No countries found
-                    </div>
-                  )}
+          <div className="max-h-[300px] overflow-y-auto space-y-0.5 pr-1 scrollbar-none">
+            {filteredPopular.length > 0 && (
+              <>
+                <div className="px-3 pb-1 pt-0.5">
+                  <span className="text-[10px] font-semibold tracking-widest uppercase text-white/40">Popular</span>
                 </div>
+                {filteredPopular.map((c, i) => renderRow(c, i))}
+              </>
+            )}
+
+            {filteredAll.length > 0 && (
+              <>
+                {filteredPopular.length > 0 && (
+                  <div className="px-3 pb-1 pt-2">
+                    <span className="text-[10px] font-semibold tracking-widest uppercase text-white/40">All destinations</span>
+                  </div>
+                )}
+                {filteredAll.map((c, i) => renderRow(c, filteredPopular.length + i))}
+              </>
+            )}
+
+            {totalCount === 0 && (
+              <div className="text-center py-6 text-sm text-white/35">No countries found</div>
+            )}
+          </div>
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
   );
 }
-
-// Custom scrollbar styles
-const scrollbarStyles = `
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(102, 126, 234, 0.3);
-    border-radius: 3px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(102, 126, 234, 0.5);
-  }
-`;

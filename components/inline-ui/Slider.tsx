@@ -4,6 +4,9 @@ import { useState } from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { type ColorConfig, CONTROL_COLORS } from "@/lib/inline-ui/colors";
+
+const DEFAULT_COLOR = CONTROL_COLORS[1];
 
 interface SliderProps {
   value: number;
@@ -14,6 +17,7 @@ interface SliderProps {
   formatValue?: (value: number) => string;
   label?: string;
   className?: string;
+  color?: ColorConfig;
 }
 
 export function Slider({
@@ -24,32 +28,22 @@ export function Slider({
   step = 1,
   formatValue = (v) => v.toString(),
   label,
-  className
+  color = DEFAULT_COLOR,
 }: SliderProps) {
   const [isDragging, setIsDragging] = useState(false);
 
-  const percentage = ((value - min) / (max - min)) * 100;
-
   return (
     <motion.div
-      className={cn(
-        "inline-flex flex-col gap-2 px-4 py-3 rounded-xl",
-        "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
-        "shadow-sm min-w-[200px]",
-        className
-      )}
+      className="inline-flex flex-col gap-2 px-4 py-3 rounded-xl min-w-[200px]"
+      style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      transition={{ type: "spring", stiffness: 800, damping: 20 }}
     >
       {label && (
         <div className="flex justify-between items-center mb-1">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-            {label}
-          </span>
-          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-            {formatValue(value)}
-          </span>
+          <span className="text-xs font-semibold text-white/60">{label}</span>
+          <span className="text-sm font-semibold text-white">{formatValue(value)}</span>
         </div>
       )}
 
@@ -63,28 +57,26 @@ export function Slider({
         max={max}
         step={step}
       >
-        <SliderPrimitive.Track className="bg-gray-200 dark:bg-gray-700 relative grow rounded-full h-2">
+        <SliderPrimitive.Track className="relative grow rounded-full h-2" style={{ background: "rgba(255,255,255,0.15)" }}>
           <SliderPrimitive.Range
-            className="absolute bg-gradient-to-r from-blue-500 to-blue-600 rounded-full h-full"
-            style={{
-              background: `linear-gradient(90deg, #3b82f6 0%, #2563eb ${percentage}%, #1d4ed8 100%)`
-            }}
+            className="absolute rounded-full h-full"
+            style={{ background: color.gradient }}
           />
         </SliderPrimitive.Track>
 
         <SliderPrimitive.Thumb
           className={cn(
-            "block w-5 h-5 bg-white dark:bg-gray-100 shadow-md rounded-full",
-            "border-2 border-blue-600",
-            "hover:scale-110 focus:scale-110",
-            "focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2",
-            "transition-transform duration-150",
-            isDragging && "scale-110 ring-2 ring-blue-400 ring-offset-2"
+            "block w-5 h-5 rounded-full shadow-md focus:outline-none transition-transform duration-150",
+            isDragging && "scale-110"
           )}
+          style={{
+            background: color.gradient,
+            boxShadow: `0 0 0 3px rgba(255,255,255,0.25), 0 3px 10px rgba(${color.shadowRgb},0.5)`,
+          }}
         />
       </SliderPrimitive.Root>
 
-      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex justify-between text-xs text-white/40">
         <span>{formatValue(min)}</span>
         <span>{formatValue(max)}</span>
       </div>

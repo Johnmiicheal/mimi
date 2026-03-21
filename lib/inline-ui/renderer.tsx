@@ -4,14 +4,14 @@ import { Fragment } from "react";
 import { NumberStepper } from "@/components/inline-ui/NumberStepper";
 import { PriceStepper } from "@/components/inline-ui/PriceStepper";
 import { DatePicker } from "@/components/inline-ui/DatePicker";
-import { CountryPicker, type Country } from "@/components/inline-ui/CountryPicker";
+import { CountryPicker } from "@/components/inline-ui/CountryPicker";
 import { ToggleChip } from "@/components/inline-ui/ToggleChip";
 import { Slider } from "@/components/inline-ui/Slider";
 import { Select } from "@/components/inline-ui/Select";
 import { VotingButtons } from "@/components/inline-ui/VotingButtons";
 import { parseInlineUI, type ParsedSegment } from "./parser";
-import { KanbanBoard } from "@/components/kanban/KanbanBoard";
-import { parseItinerary } from "@/lib/utils/parse-itinerary";
+import { COUNTRY_BY_CODE, type Country } from "./countries";
+import { getControlColor } from "./colors";
 
 interface InlineUIRendererProps {
   text: string;
@@ -70,27 +70,32 @@ function renderSegment(
 
   if (!segment.controlId) return null;
   const id = segment.controlId;
+  const color = getControlColor(id);
 
   if (segment.type === 'stepper') {
+    const initial = segment.props?.initialValue ?? 1;
     return (
       <NumberStepper
         key={key}
-        value={controlValues[id] ?? 1}
+        value={controlValues[id] ?? initial}
         onChange={(v) => onControlChange(id, v)}
         min={1}
         max={99}
+        color={color}
       />
     );
   }
   if (segment.type === 'price') {
+    const initial = segment.props?.initialValue ?? 1000;
     return (
       <PriceStepper
         key={key}
-        value={controlValues[id] ?? 1000}
+        value={controlValues[id] ?? initial}
         onChange={(v) => onControlChange(id, v)}
         min={0}
         max={100000}
         step={50}
+        color={color}
       />
     );
   }
@@ -100,16 +105,21 @@ function renderSegment(
         key={key}
         value={controlValues[id] ?? new Date()}
         onChange={(v) => onControlChange(id, v)}
+        color={color}
       />
     );
   }
   if (segment.type === 'country') {
-    const defaultCountry: Country = { code: 'US', name: 'United States', flag: '🇺🇸' };
+    const fallback: Country = { code: 'US', name: 'United States' };
+    // If the AI passed an ISO code (e.g. {{::country[destination|JP]}}), look it up
+    const initialCode: string | null = segment.props?.initialCode ?? null;
+    const defaultCountry = initialCode ? (COUNTRY_BY_CODE[initialCode] ?? fallback) : fallback;
     return (
       <CountryPicker
         key={key}
         value={controlValues[id] ?? defaultCountry}
         onChange={(v) => onControlChange(id, v)}
+        color={color}
       />
     );
   }
@@ -120,6 +130,7 @@ function renderSegment(
         label={segment.props?.label ?? id}
         value={controlValues[id] ?? segment.props?.defaultValue ?? false}
         onChange={(v) => onControlChange(id, v)}
+        color={color}
       />
     );
   }
@@ -134,6 +145,7 @@ function renderSegment(
         step={segment.props?.step ?? 1}
         formatValue={(v) => `$${v.toLocaleString()}`}
         label={id}
+        color={color}
       />
     );
   }
@@ -145,6 +157,7 @@ function renderSegment(
         value={controlValues[id] ?? options[0]?.value ?? ''}
         onChange={(v) => onControlChange(id, v)}
         options={options}
+        color={color}
       />
     );
   }
@@ -254,22 +267,22 @@ function renderMarkdownBlock(
       const num = line.match(/^(\d+)\. /)?.[1] ?? '';
       listItems.push(
         <li key={lk} className="flex items-start gap-1">
-          <span className="shrink-0 text-gray-500">{num}.</span>
+          <span className="shrink-0 text-white/40">{num}.</span>
           <span>{renderLineSegments(line.replace(/^\d+\. /, ''), lineKey, controlValues, onControlChange)}</span>
         </li>
       );
     } else if (line === '') {
       flushList();
       if (elements.length > 0) {
-        elements.push(<div key={nextKey()} className="h-2" />);
+        elements.push(<div key={nextKey()} className="h-4" />);
       }
     } else {
       flushList();
       const content = renderLineSegments(line, lineKey, controlValues, onControlChange);
       elements.push(
-        <p key={nextKey()} className="leading-relaxed text-sm">
+        <div key={nextKey()} className="leading-relaxed text-lg font-medium flex flex-wrap items-center gap-1.5">
           {content}
-        </p>
+        </div>
       );
     }
   }
@@ -279,44 +292,8 @@ function renderMarkdownBlock(
 }
 
 export function InlineUIRenderer({ text, controlValues, onControlChange }: InlineUIRendererProps) {
-  // Detect itinerary — if we have ≥2 complete Day sections, render as Kanban
-  const DAY_HEADING_RE = /^#{2,3}\s+Day\s+\d+/im;
-  const firstDayIdx = text.search(DAY_HEADING_RE);
-
-  if (firstDayIdx !== -1) {
-    const schedule = parseItinerary(text.slice(firstDayIdx));
-    if (schedule && schedule.length >= 2) {
-      const preText = text.slice(0, firstDayIdx).trimEnd();
-      // Find where the itinerary ends (next non-Day ## heading or end of text)
-      const afterItinerary = text.slice(firstDayIdx);
-      const dayLines = afterItinerary.split('\n');
-      let itinEnd = dayLines.length;
-      let inItinerary = false;
-      for (let i = 0; i < dayLines.length; i++) {
-        if (/^#{2,3}\s+Day\s+\d+/i.test(dayLines[i])) {
-          inItinerary = true;
-        } else if (inItinerary && /^#{1,2}\s+(?!Day\s)/i.test(dayLines[i])) {
-          itinEnd = i;
-          break;
-        }
-      }
-      const postText = dayLines.slice(itinEnd).join('\n').trimStart();
-
-      return (
-        <div className="space-y-0.5">
-          {preText && renderMarkdownBlock(preText, controlValues, onControlChange, 0)}
-          <div className="my-4">
-            <KanbanBoard schedule={schedule} />
-          </div>
-          {postText && renderMarkdownBlock(postText, controlValues, onControlChange, 10000)}
-        </div>
-      );
-    }
-  }
-
-  // No itinerary — standard markdown rendering
   return (
-    <div className="space-y-0.5">
+    <div className="space-y-3">
       {renderMarkdownBlock(text, controlValues, onControlChange)}
     </div>
   );

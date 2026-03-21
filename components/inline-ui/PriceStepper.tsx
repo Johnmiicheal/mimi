@@ -1,8 +1,10 @@
 "use client";
 
-import { Minus, Plus, CurrencyDollar } from "@phosphor-icons/react";
+import { Minus, Plus } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { type ColorConfig, CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui/colors";
+
+const DEFAULT_COLOR = CONTROL_COLORS[2]; // green fallback
 
 interface PriceStepperProps {
   value: number;
@@ -12,6 +14,7 @@ interface PriceStepperProps {
   step?: number;
   currency?: string;
   className?: string;
+  color?: ColorConfig;
 }
 
 export function PriceStepper({
@@ -21,7 +24,7 @@ export function PriceStepper({
   max = 100000,
   step = 50,
   currency = "$",
-  className
+  color = DEFAULT_COLOR,
 }: PriceStepperProps) {
   const handleDecrement = () => {
     const newValue = Math.max(min, value - step);
@@ -33,76 +36,57 @@ export function PriceStepper({
     if (newValue !== value) onChange(newValue);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US').format(price);
+  const btnStyle = {
+    background: color.gradient,
+    boxShadow: pillBoxShadow(color, "sm"),
   };
 
   return (
     <motion.span
-      className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full",
-        "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
-        "shadow-sm",
-        className
-      )}
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+      style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}
       initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      transition={{ type: "spring", stiffness: 800, damping: 20 }}
     >
       <motion.button
         onClick={handleDecrement}
         disabled={value <= min}
-        className={cn(
-          "flex items-center justify-center w-6 h-6 rounded-full",
-          "bg-blue-600 hover:bg-blue-700",
-          "text-white",
-          "disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed",
-          "transition-colors duration-200"
-        )}
-        whileHover={{ scale: value > min ? 1.1 : 1 }}
-        whileTap={{ scale: value > min ? 0.95 : 1 }}
+        className="flex items-center justify-center w-6 h-6 rounded-full text-white disabled:opacity-35 disabled:cursor-not-allowed"
+        style={btnStyle}
+        whileHover={{ scale: value > min ? 1.15 : 1, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+        whileTap={{ scale: value > min ? 0.88 : 1, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+        transition={{ type: "spring", stiffness: 800, damping: 20 }}
       >
-        <Minus weight="bold" className="w-3 h-3" />
+        <Minus weight="bold" className="w-3.5 h-3.5" />
       </motion.button>
 
-      <div className="flex items-center gap-1 min-w-[4rem] justify-center">
-        <CurrencyDollar
-          weight="bold"
-          className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
-        />
+      <span className="flex items-center justify-center min-w-18">
+        <span className="font-semibold text-base text-white leading-none">{currency}</span>
         <input
           type="number"
           value={value}
           onChange={(e) => {
             const newValue = parseInt(e.target.value) || min;
-            const clampedValue = Math.max(min, Math.min(max, newValue));
-            onChange(clampedValue);
+            onChange(Math.max(min, Math.min(max, newValue)));
           }}
-          className={cn(
-            "font-bold text-gray-900 dark:text-white w-20 text-center",
-            "bg-transparent border-none outline-none",
-            "appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          )}
+          className="font-semibold text-base text-white w-12 p-0 pl-0.5 text-left bg-transparent border-none outline-none appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           min={min}
           max={max}
           step={step}
         />
-      </div>
+      </span>
 
       <motion.button
         onClick={handleIncrement}
         disabled={value >= max}
-        className={cn(
-          "flex items-center justify-center w-6 h-6 rounded-full",
-          "bg-blue-600 hover:bg-blue-700",
-          "text-white",
-          "disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed",
-          "transition-colors duration-200"
-        )}
-        whileHover={{ scale: value < max ? 1.1 : 1 }}
-        whileTap={{ scale: value < max ? 0.95 : 1 }}
+        className="flex items-center justify-center w-6 h-6 rounded-full text-white disabled:opacity-35 disabled:cursor-not-allowed"
+        style={btnStyle}
+        whileHover={{ scale: value < max ? 1.15 : 1, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+        whileTap={{ scale: value < max ? 0.88 : 1, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+        transition={{ type: "spring", stiffness: 800, damping: 20 }}
       >
-        <Plus weight="bold" className="w-3 h-3" />
+        <Plus weight="bold" className="w-3.5 h-3.5" />
       </motion.button>
     </motion.span>
   );

@@ -3,7 +3,9 @@
 import { CaretDown, Check } from "@phosphor-icons/react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { type ColorConfig, CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui/colors";
+
+const DEFAULT_COLOR = CONTROL_COLORS[1];
 
 interface SelectOption {
   value: string;
@@ -17,6 +19,7 @@ interface SelectProps {
   options: SelectOption[];
   placeholder?: string;
   className?: string;
+  color?: ColorConfig;
 }
 
 export function Select({
@@ -24,7 +27,7 @@ export function Select({
   onChange,
   options,
   placeholder = "Select...",
-  className
+  color = DEFAULT_COLOR,
 }: SelectProps) {
   const selectedOption = options.find(opt => opt.value === value);
 
@@ -32,35 +35,27 @@ export function Select({
     <SelectPrimitive.Root value={value} onValueChange={onChange}>
       <SelectPrimitive.Trigger asChild>
         <motion.button
-          className={cn(
-            "inline-flex items-center gap-2 px-3 py-1.5 rounded-full",
-            "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700",
-            "shadow-sm hover:shadow-md",
-            "text-gray-900 dark:text-white font-medium text-sm",
-            "transition-all duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-            className
-          )}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-semibold text-base text-white focus:outline-none"
+          style={{
+            background: color.gradient,
+            boxShadow: pillBoxShadow(color),
+          }}
+          whileHover={{ scale: 1.08, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+          whileTap={{ scale: 0.93, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+          transition={{ type: "spring", stiffness: 800, damping: 20 }}
         >
-          {selectedOption?.icon && (
-            <span className="flex-shrink-0">{selectedOption.icon}</span>
-          )}
+          {selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
           <SelectPrimitive.Value placeholder={placeholder} />
           <SelectPrimitive.Icon>
-            <CaretDown weight="bold" className="w-3 h-3 text-gray-500" />
+            <CaretDown weight="bold" className="w-3.5 h-3.5 text-white/70" />
           </SelectPrimitive.Icon>
         </motion.button>
       </SelectPrimitive.Trigger>
 
       <SelectPrimitive.Portal>
         <SelectPrimitive.Content
-          className={cn(
-            "bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700",
-            "overflow-hidden z-50",
-            "animate-in fade-in-0 zoom-in-95"
-          )}
+          className="rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in-0 zoom-in-95"
+          style={{ background: "#0d2050", border: "1px solid rgba(255,255,255,0.15)" }}
           position="popper"
           sideOffset={8}
         >
@@ -69,24 +64,13 @@ export function Select({
               <SelectPrimitive.Item
                 key={option.value}
                 value={option.value}
-                className={cn(
-                  "relative flex items-center gap-2 px-3 py-2 rounded-lg",
-                  "text-sm text-gray-900 dark:text-white",
-                  "hover:bg-blue-50 dark:hover:bg-blue-900/30",
-                  "focus:bg-blue-50 dark:focus:bg-blue-900/30",
-                  "focus:outline-none cursor-pointer",
-                  "transition-colors duration-150",
-                  "select-none"
-                )}
+                className="relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-white/85 hover:bg-white/10 focus:bg-white/10 focus:outline-none cursor-pointer transition-colors duration-150 select-none"
               >
                 <SelectPrimitive.ItemIndicator className="absolute left-1 flex items-center justify-center">
-                  <Check weight="bold" className="w-4 h-4 text-blue-600" />
+                  <Check weight="bold" className="w-4 h-4 text-white" />
                 </SelectPrimitive.ItemIndicator>
-
                 <div className="flex items-center gap-2 pl-6">
-                  {option.icon && (
-                    <span className="flex-shrink-0">{option.icon}</span>
-                  )}
+                  {option.icon && <span className="shrink-0">{option.icon}</span>}
                   <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                 </div>
               </SelectPrimitive.Item>

@@ -2,7 +2,9 @@
 
 import { Check, X } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { type ColorConfig, CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui/colors";
+
+const DEFAULT_COLOR = CONTROL_COLORS[1]; // blue fallback
 
 interface ToggleChipProps {
   label: string;
@@ -10,6 +12,7 @@ interface ToggleChipProps {
   onChange: (value: boolean) => void;
   icon?: React.ReactNode;
   className?: string;
+  color?: ColorConfig;
 }
 
 export function ToggleChip({
@@ -17,37 +20,38 @@ export function ToggleChip({
   value,
   onChange,
   icon,
-  className
+  color = DEFAULT_COLOR,
 }: ToggleChipProps) {
   return (
     <motion.button
       onClick={() => onChange(!value)}
-      className={cn(
-        "inline-flex items-center gap-1.5 px-4 py-2 rounded-full",
-        "border-2 transition-all duration-300",
-        "font-medium text-sm",
-        "hover:scale-105 active:scale-95",
+      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full font-semibold text-base text-white"
+      style={
         value
-          ? "bg-blue-600 border-blue-600 text-white shadow-md"
-          : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500",
-        className
-      )}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+          ? {
+              background: color.gradient,
+              boxShadow: pillBoxShadow(color),
+              border: "none",
+            }
+          : {
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.18)",
+            }
+      }
+      whileHover={{ scale: 1.08, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+      whileTap={{ scale: 0.93, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+      transition={{ type: "spring", stiffness: 800, damping: 20 }}
       layout
     >
       <motion.div
         initial={false}
-        animate={{
-          scale: value ? [0.8, 1.2, 1] : 1,
-          rotate: value ? [0, 10, 0] : 0
-        }}
-        transition={{ duration: 0.3, type: "spring" }}
+        animate={{ scale: value ? 1 : 1, rotate: value ? [0, 12] : 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
       >
         {value ? (
           <Check weight="bold" className="w-4 h-4" />
         ) : (
-          icon || <X weight="bold" className="w-4 h-4 opacity-30" />
+          icon || <X weight="bold" className="w-4 h-4 opacity-40" />
         )}
       </motion.div>
       <motion.span layout="position">{label}</motion.span>

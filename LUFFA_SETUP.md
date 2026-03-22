@@ -30,7 +30,14 @@ It also accepts `LUFFA_SECRET` as an alias for `LUFFA_BOT_SECRET`.
 ## 2) Run the bridge
 
 ```bash
+# Standard mode (recommended)
 npm run bot:luffa
+
+# Verbose debug mode (with detailed logging)
+npm run bot:luffa:debug
+
+# Test API connections only
+npm run bot:test
 ```
 
 ## 3) Notes
@@ -38,3 +45,5 @@ npm run bot:luffa
 - Keep the bridge process running continuously.
 - Group replies are currently sent as normal text (`type: "1"`).
 - Button/confirm message reply format can be added next if you want interactive actions.
+- The bridge now includes detailed logging to track message flow and troubleshoot issues.
+- If messages aren't appearing, see [LUFFA_TROUBLESHOOTING.md](LUFFA_TROUBLESHOOTING.md)

@@ -9,7 +9,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "bot:luffa": "node scripts/luffa-anthropic-bridge.mjs"
+    "bot:luffa": "node scripts/luffa-anthropic-bridge-v2.mjs",
+    "bot:luffa:debug": "node scripts/luffa-anthropic-bridge-v2-verbose.mjs",
+    "bot:test": "node scripts/test-luffa-bridge.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.63",

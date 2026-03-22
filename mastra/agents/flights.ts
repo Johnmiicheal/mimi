@@ -33,10 +33,27 @@ const localTransportSchema = z.object({
   priceEstimate: z.string(),
 });
 
+const airportLocationSchema = z.object({
+  code: z.string(),
+  city: z.string(),
+  airport: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
+const destinationLocationSchema = z.object({
+  label: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
 export const transportSchema = z.object({
   summary: z.string(),
   recommendedMode: z.enum(['air', 'train', 'bus', 'ferry', 'car', 'mixed']),
   route: z.string(),
+  originAirport: airportLocationSchema.optional(),
+  arrivalAirport: airportLocationSchema.optional(),
+  destinationLocation: destinationLocationSchema.optional(),
   flights: z.array(flightOptionSchema).max(4),
   alternatives: z.array(alternativeTransportSchema).max(4),
   localOptions: z.array(localTransportSchema).max(4),
@@ -98,6 +115,9 @@ Return a multi-mode transport summary with:
 - summary: one concise recommendation sentence
 - recommendedMode: one of air, train, bus, ferry, car, mixed
 - route: example "JFK -> HND"
+- originAirport: departure airport/city with airport code and approximate coordinates
+- arrivalAirport: arrival airport/city with airport code and approximate coordinates
+- destinationLocation: city-center or hotel-area coordinates near the final destination
 - flights: up to 4 realistic flight options with airline, price in USD per person, duration, stops, departTime, arrivalTime, class, and baggage allowances when possible
 - alternatives: up to 4 realistic non-flight options or supporting long-distance options (train, bus, ferry, car, rideshare) with provider, duration, priceEstimate, bookingHint, and bestFor
 - localOptions: up to 4 useful ways to get around locally, such as metro, taxis, Uber, rail passes, airport transfers, or ferries

@@ -8,6 +8,8 @@ import { ArrowClockwise, CaretLeft, House, Warning, X } from "@phosphor-icons/re
 import { LandingPage } from "@/components/landing/LandingPage";
 import { ChatFooter } from "@/components/chat/ChatFooter";
 import { ChatMessage } from "@/components/chat/ChatMessage";
+import type { AgentData } from "@/components/AgentPanel";
+import { TripPlannerDrawer } from "@/components/trip-planner/TripPlannerDrawer";
 import {
   ThinkingSkeleton,
   StreamingDots,
@@ -20,6 +22,8 @@ import {
   type PersistedChatSession,
   type PersistedChatSnapshot,
 } from "@/lib/chatPersistence";
+import { extractAgentData } from "@/lib/chat/agent-data";
+import { buildTripArtifact } from "@/lib/trip-artifact";
 
 interface ChatExperienceProps {
   sessions: PersistedChatSession[];
@@ -55,6 +59,7 @@ export function ChatExperience({
   const [dismissedError, setDismissedError] = useState<string | null>(null);
   const [hasHydratedSession, setHasHydratedSession] = useState(!activeSessionId);
   const [showLandingTransition, setShowLandingTransition] = useState(false);
+  const [plannerOpen, setPlannerOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef(new Map<string, HTMLDivElement>());
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -137,6 +142,27 @@ export function ChatExperience({
     return messages[messages.length - 1]?.id;
   }, [messages]);
 
+  const aggregatedAgentData = useMemo(() => {
+    const merged: Record<string, unknown> = {};
+
+    for (const message of messages) {
+      if (message.role !== "assistant") continue;
+      const { agentData } = extractAgentData(message.parts as unknown[] | undefined);
+      Object.assign(merged, agentData);
+    }
+
+    return merged as AgentData;
+  }, [messages]);
+
+  const tripArtifact = useMemo(
+    () =>
+      buildTripArtifact({
+        agentData: aggregatedAgentData,
+        controlValues,
+      }),
+    [aggregatedAgentData, controlValues]
+  );
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -187,6 +213,10 @@ export function ChatExperience({
     },
     [isLoading, sendMessage]
   );
+
+  const handleOpenPlanner = useCallback(() => {
+    if (tripArtifact) setPlannerOpen(true);
+  }, [tripArtifact]);
 
   const handleReplan = useCallback(
     async (changes: Map<string, unknown>) => {
@@ -248,6 +278,7 @@ export function ChatExperience({
     setInputValue("");
     setDismissedError(null);
     setShowLandingTransition(false);
+    setPlannerOpen(false);
     onReturnHome?.();
   }, [
     activeSessionId,
@@ -332,6 +363,16 @@ export function ChatExperience({
       </AnimatePresence>
 
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto relative">
+        <TripPlannerDrawer
+          open={plannerOpen}
+          onOpenChange={setPlannerOpen}
+          artifact={tripArtifact}
+          bookingInProgress={isLoading && Boolean(tripArtifact)}
+          onPrimaryAction={tripArtifact ? () => {
+            const destination = tripArtifact.destination;
+            void handleAction(`Yes, this plan makes sense. Start the browser booking flow for ${destination}, choose the best transport and stay options, and stop at checkout.`);
+          } : undefined}
+        />
         {isChat && (
           <div className="sticky top-0 z-20 px-4 pt-4">
             <div className="mx-auto flex max-w-5xl justify-start">
@@ -396,6 +437,7 @@ export function ChatExperience({
                     controlValues={controlValues}
                     onControlChange={handleControlChange}
                     onAction={handleAction}
+                    onOpenPlanner={handleOpenPlanner}
                   />
                 </div>
               ))}

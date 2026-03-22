@@ -29,6 +29,20 @@ export interface FlightOption {
   };
 }
 
+export interface AirportLocation {
+  code: string;
+  city: string;
+  airport: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface DestinationLocation {
+  label: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface AlternativeTransportOption {
   mode: 'train' | 'bus' | 'ferry' | 'car' | 'rideshare';
   provider: string;
@@ -48,6 +62,9 @@ export interface FlightsData {
   summary: string;
   recommendedMode: 'air' | 'train' | 'bus' | 'ferry' | 'car' | 'mixed';
   route: string;
+  originAirport?: AirportLocation;
+  arrivalAirport?: AirportLocation;
+  destinationLocation?: DestinationLocation;
   flights: FlightOption[];
   alternatives: AlternativeTransportOption[];
   localOptions: LocalTransportOption[];

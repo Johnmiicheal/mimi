@@ -13,6 +13,10 @@ export interface LodgingOption {
   rating: number;
   perks: string[];
   bookingUrl?: string;
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
 }
 
 export interface LodgingData {
@@ -20,6 +24,10 @@ export interface LodgingData {
   stayType: LodgingOption["stayType"];
   summary: string;
   recommendedArea: string;
+  recommendedLocation?: {
+    latitude: number;
+    longitude: number;
+  };
   options: LodgingOption[];
   bookingTip: string;
 }

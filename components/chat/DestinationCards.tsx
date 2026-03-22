@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Star, MapPin } from "@phosphor-icons/react";
+import { ArrowRight, MapPin, Star } from "@phosphor-icons/react";
 import { CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui/colors";
 import type { SuggestionsData } from "@/mastra/agents/suggestions";
 

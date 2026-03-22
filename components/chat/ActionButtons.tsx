@@ -11,6 +11,7 @@ import {
   SlidersHorizontal,
   CurrencyDollar,
   CalendarBlank,
+  MapTrifold,
 } from "@phosphor-icons/react";
 import { CONTROL_COLORS, pillBoxShadow } from "@/lib/inline-ui/colors";
 import type { AgentData } from "@/components/AgentPanel";
@@ -31,6 +32,7 @@ interface ActionButtonsProps {
   controlValues: Record<string, any>;
   assistantText?: string;
   onAction: (prompt: string) => void;
+  onOpenPlanner?: () => void;
   isLoading?: boolean;
 }
 
@@ -108,7 +110,7 @@ function extractInlineDefaults(text: string | undefined): InlineDefaults {
   return defaults;
 }
 
-export function ActionButtons({ agentData, controlValues, assistantText, onAction, isLoading }: ActionButtonsProps) {
+export function ActionButtons({ agentData, controlValues, assistantText, onAction, onOpenPlanner, isLoading }: ActionButtonsProps) {
   const inlineDefaults = extractInlineDefaults(assistantText);
   const destination: Country | undefined = controlValues['destination'] ?? inlineDefaults.destination;
   const destName = destination?.name ?? '';
@@ -131,6 +133,7 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
   const days = inferTripDays(controlValues);
 
   const buttons: ActionButton[] = [];
+  const hasPlannerArtifact = Boolean(agentData.itinerary || agentData.flights || agentData.lodging || agentData.events);
 
   if (destName) {
     // Primary CTA — plan the trip if not yet planned
@@ -266,7 +269,7 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
     });
   }
 
-  if (buttons.length === 0) return null;
+  if (buttons.length === 0 && !(hasPlannerArtifact && onOpenPlanner)) return null;
 
   // Cap at 4 buttons to avoid clutter
   const visible = buttons.slice(0, 4);
@@ -306,6 +309,26 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
           </motion.button>
         );
       })}
+      {hasPlannerArtifact && onOpenPlanner && (
+        <motion.button
+          onClick={onOpenPlanner}
+          disabled={isLoading}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold text-white disabled:opacity-50 disabled:cursor-not-allowed border border-white/12 bg-white/8"
+          initial={{ opacity: 0, scale: 0.85, y: 6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{
+            duration: 0.4,
+            type: "spring",
+            stiffness: 800,
+            damping: 22,
+          }}
+          whileHover={{ scale: 1.07, transition: { type: "spring", stiffness: 800, damping: 20 } }}
+          whileTap={{ scale: 0.93, transition: { type: "spring", stiffness: 1000, damping: 30 } }}
+        >
+          <MapTrifold weight="fill" className="w-3.5 h-3.5" />
+          <span>Open planner</span>
+        </motion.button>
+      )}
     </motion.div>
   );
 }

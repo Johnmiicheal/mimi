@@ -16,6 +16,10 @@ const lodgingOptionSchema = z.object({
   rating: z.number(),
   perks: z.array(z.string()).max(4),
   bookingUrl: z.string().url().optional(),
+  location: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).optional(),
 });
 
 export const lodgingSchema = z.object({
@@ -23,6 +27,10 @@ export const lodgingSchema = z.object({
   stayType: stayTypeSchema,
   summary: z.string(),
   recommendedArea: z.string(),
+  recommendedLocation: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).optional(),
   options: z.array(lodgingOptionSchema).min(2).max(4),
   bookingTip: z.string(),
 });
@@ -74,7 +82,9 @@ Return:
 - stayType
 - summary: one concise recommendation sentence
 - recommendedArea: the best area or neighborhood to stay in
+- recommendedLocation: approximate coordinates for that best area
 - options: 2-4 strong options with provider, neighborhood, nightlyRate, totalPrice, rating, perks, and a plausible bookingUrl
+- each option should include approximate coordinates for map placement when possible
 - bookingTip: one practical tip about choosing or booking the stay
 
 Rules:

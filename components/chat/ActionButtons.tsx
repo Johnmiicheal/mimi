@@ -116,6 +116,7 @@ export function ActionButtons({ agentData, controlValues, assistantText, onActio
   const destination: Country | undefined = controlValues['destination'] ?? inlineDefaults.destination;
   const destName = destination?.name ?? '';
   const travelersValue = controlValues['travelers'];
+  const travelersExplicit = typeof travelersValue === 'number' || inlineDefaults.travelers != null;
   const travelers =
     typeof travelersValue === 'number'
       ? travelersValue

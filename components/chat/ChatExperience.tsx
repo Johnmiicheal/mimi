@@ -16,6 +16,7 @@ import {
   ReplanningIndicator,
 } from "@/components/chat/StatusIndicators";
 import { formatReplanPrompt } from "@/lib/hooks/useReplan";
+import { VoiceOverlay } from "@/components/chat/VoiceOverlay";
 import {
   normalizePersistedMessages,
   toConvexSafeSnapshot,
@@ -162,7 +163,16 @@ export function ChatExperience({
       }),
     [aggregatedAgentData, controlValues]
   );
-
+  const latestAssistantText = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const msg = messages[i];
+      if (msg?.role !== 'assistant') continue;
+      const parts = (msg.parts as Array<{ type?: string; text?: string }> | undefined) ?? [];
+      const text = parts.filter((p) => p.type === 'text').map((p) => p.text ?? '').join('');
+      if (text.trim()) return text;
+    }
+    return undefined;
+  }, [messages]);
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -465,6 +475,14 @@ export function ChatExperience({
           </div>
         )}
       </div>
+
+      {isChat && (
+        <VoiceOverlay
+          onTranscription={setInputValue}
+          latestAssistantText={latestAssistantText}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

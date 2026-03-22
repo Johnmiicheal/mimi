@@ -42,6 +42,7 @@ loadEnvFile(path.join(cwd, '.env'));
 const LUFFA_SECRET = process.env.LUFFA_BOT_SECRET || process.env.LUFFA_SECRET;
 const POLL_INTERVAL = Number(process.env.LUFFA_POLL_INTERVAL_MS) || 1000;
 const MIMI_URL = process.env.MIMI_URL || 'http://localhost:3000/api/luffa';
+const DEBUG_POLLS = /^(1|true|yes|on)$/i.test(process.env.LUFFA_DEBUG_POLLS || '');
 
 if (!LUFFA_SECRET) {
   console.error('❌ Missing LUFFA_BOT_SECRET in .env.local or .env');
@@ -119,7 +120,17 @@ async function pollLuffa() {
   if (!res.ok) throw new Error(`Luffa poll ${res.status}`);
   const payload = await res.json();
   // Response is an array of envelopes: [{ uid, count, message: [jsonString], type }]
-  return Array.isArray(payload) ? payload : (Array.isArray(payload.data) ? payload.data : []);
+  const envelopes = Array.isArray(payload) ? payload : (Array.isArray(payload.data) ? payload.data : []);
+
+  if (DEBUG_POLLS) {
+    console.log(`[poll] envelopes=${envelopes.length}`);
+    for (const envelope of envelopes) {
+      const messageCount = Array.isArray(envelope?.message) ? envelope.message.length : 0;
+      console.log(`  [poll] type=${String(envelope?.type)} uid=${envelope?.uid ?? 'unknown'} messages=${messageCount}`);
+    }
+  }
+
+  return envelopes;
 }
 
 /** Send plain text — DM or group */
@@ -207,7 +218,7 @@ async function resetMimi(conversationId) {
  */
 function* extractMessages(envelope) {
   const isGroup = String(envelope.type) === '1';
-  const envelopeUid = envelope.uid; // recipient (bot) or group ID
+  const envelopeUid = envelope.uid; // DM counterpart or group ID, depending on Luffa payload shape
   const rawMessages = Array.isArray(envelope.message) ? envelope.message : [];
 
   for (const raw of rawMessages) {
@@ -220,9 +231,16 @@ function* extractMessages(envelope) {
 
     const id = parsed.msgId || `${envelopeUid}-${Date.now()}-${Math.random()}`;
     const text = (parsed.text || '').trim();
-    const senderUid = parsed.uid || envelopeUid; // group has sender uid inside
-    const replyTo = isGroup ? envelopeUid : envelopeUid; // always reply to envelope uid
-    const conversationId = isGroup ? `group-${envelopeUid}` : `user-${envelopeUid}`;
+    const nestedUid = parsed.uid || parsed.fromUserId || parsed.userId || parsed.from;
+    const senderUid = nestedUid || envelopeUid;
+
+    // Be tolerant of both known DM payload shapes:
+    // 1. env.uid is the user we should reply to
+    // 2. env.uid is the bot/conversation id and the actual user lives inside the nested message
+    const directMessageUid = nestedUid || envelopeUid;
+    const replyTo = isGroup ? envelopeUid : directMessageUid;
+    const conversationKey = isGroup ? envelopeUid : directMessageUid;
+    const conversationId = isGroup ? `group-${conversationKey}` : `user-${conversationKey}`;
 
     yield { id, text, senderUid, isGroup, replyTo, conversationId };
   }

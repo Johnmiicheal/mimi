@@ -34,7 +34,7 @@ function DestinationCard({
   const [imgError, setImgError] = useState(false);
   const color = CONTROL_COLORS[index % CONTROL_COLORS.length];
 
-  const imageUrl = `https://source.unsplash.com/featured/800x500/?${encodeURIComponent(suggestion.imageQuery)}`;
+  const imageUrl = `/api/image?q=${encodeURIComponent(suggestion.imageQuery)}`;
 
   return (
     <motion.div
